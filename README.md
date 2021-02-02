@@ -1,2 +1,3 @@
-# rsyslog-event-hub
-rsyslog omprog util to forward logs to Azure Event Hub
+# franzistential
+
+A small utility to forward logs or arbitrary text to Kafka-esque destinations.
