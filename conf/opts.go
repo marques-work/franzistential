@@ -14,6 +14,7 @@ var (
 	TcpService   *string
 	UdpService   *string
 	Destinations []domain.Destination
+	SendTimeout  *uint64
 )
 
 func OptParse() {
@@ -24,6 +25,7 @@ func OptParse() {
 	UdpService = flag.String("udpListen", "", "Listen on UDP/IP `ipaddr:portnum`, e.g. `127.0.0.1:514`; must include IP (v4 or v6) and port")
 	logging.Trace = flag.Bool("debug", false, "Verbose debug output")
 	logging.Silent = flag.Bool("quiet", false, "Silence logging output; ``does NOT affect the `-stdout` flag")
+	SendTimeout = flag.Uint64("sendTimeoutMs", uint64(20*1000), "Number of `milliseconds` before aborting message to destination (default: 20000)")
 	flag.Var(&EventHubFlag{}, "eventHub", "Forward data to the provided Azure Event Hub `connection-uri`; multiple invocations of this flag will multiplex over each connection")
 
 	flag.Parse()
@@ -43,4 +45,8 @@ func ConfigureAndValidate() {
 	if "" != *TcpService {
 		validateNetworkListenerConfig("tcp", *TcpService)
 	}
+}
+
+func ServerMode() bool {
+	return "" != *UnixSocket || "" != *TcpService || "" != *UdpService
 }
