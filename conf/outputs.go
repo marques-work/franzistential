@@ -14,4 +14,4 @@ func (eh *EventHubFlag) Set(url string) error {
 }
 
 // I don't think we care about the string rep since it's just a shim
-func (eh *EventHubFlag) String() string { return "[event-hub-uri]" }
+func (eh *EventHubFlag) String() string { return "-eventHub" }

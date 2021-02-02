@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -11,22 +12,30 @@ import (
 	"github.com/marques-work/franzistential/conf"
 	"github.com/marques-work/franzistential/domain"
 	"github.com/marques-work/franzistential/logging"
-	sls "gopkg.in/mcuadros/go-syslog.v2"
+	slog "gopkg.in/mcuadros/go-syslog.v2"
 	format "gopkg.in/mcuadros/go-syslog.v2/format"
+)
+
+var (
+	RAW     format.Format = &domain.RawFormat{}
+	RFC3164 format.Format = &format.RFC3164{}
+	RFC5424 format.Format = &format.RFC5424{}
+	RFC6587 format.Format = &format.RFC6587{}
+	DETECT  format.Format = &format.Automatic{}
 )
 
 func main() {
 	conf.ConfigureAndValidate()
 
 	if conf.ServerMode() {
-		server := sls.NewServer()
+		server := slog.NewServer()
 
 		if *conf.RawForward {
-			server.SetFormat(&domain.RawFormat{})
+			server.SetFormat(RAW)
 		}
 
 		ch := make(chan format.LogParts)
-		server.SetHandler(sls.NewChannelHandler(ch))
+		server.SetHandler(slog.NewChannelHandler(ch))
 	} else {
 		input := bufio.NewScanner(os.Stdin)
 
@@ -39,9 +48,14 @@ func main() {
 		}
 
 		for input.Scan() {
-			if err := send(input.Text(), *conf.SendTimeout, hub); err != nil {
+			line := input.Text()
+			if err := send(line, *conf.SendTimeout, hub); err != nil {
 				// Do we do more than this?
 				logging.Warn("Failed to send event %s to Event Hub [namespace]@[queue] because: %v", input.Text(), err)
+			}
+
+			if *conf.Out {
+				fmt.Println(line)
 			}
 		}
 
