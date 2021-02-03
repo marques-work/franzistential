@@ -7,12 +7,15 @@ import (
 )
 
 var (
-	Trace  *bool
-	Silent *bool
+	// Trace allows debug messages
+	Trace bool
+
+	// Silent prevents printing output
+	Silent bool
 )
 
 func Debug(message string, args ...interface{}) {
-	if *Trace {
+	if Trace {
 		_print(os.Stderr, message, args...)
 	}
 }
@@ -26,13 +29,13 @@ func Error(message string, args ...interface{}) {
 }
 
 func Die(message string, args ...interface{}) {
-	*Silent = false // Always print out fatal errors before exiting
+	Silent = false // Always print out fatal errors before exiting
 	Error(message, args...)
 	os.Exit(1)
 }
 
 func _print(w io.Writer, message string, args ...interface{}) {
-	if *Silent {
+	if Silent {
 		return
 	}
 

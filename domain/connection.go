@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/Azure/azure-amqp-common-go/v3/conn"
+import (
+	"fmt"
+
+	"github.com/Azure/azure-amqp-common-go/v3/conn"
+)
 
 type Destination interface {
 	ConnectString() string
@@ -26,6 +30,6 @@ func NewEventHub(uri string) (*EventHub, error) {
 
 		return &EventHub{url: uri, redacted: redacted}, nil
 	} else {
-		return nil, err
+		return nil, fmt.Errorf("Malformed Event Hub connection string: %s", err.Error())
 	}
 }
