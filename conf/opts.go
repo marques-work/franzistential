@@ -18,15 +18,15 @@ var (
 )
 
 func OptParse() {
-	RawForward = flag.Bool("cat", false, "Forward the input data as-is; do not try to parse into syslog-standard formats")
-	Out = flag.Bool("stdout", false, "Pass through input to STDOUT")
-	UnixSocket = flag.String("unixSocket", "", "Listen on local socket `path`; socket will be created on startup")
-	TcpService = flag.String("tcpListen", "", "Listen on TCP/IP `ipaddr:portnum`, e.g. `127.0.0.1:514`; must include IP (v4 or v6) and port")
-	UdpService = flag.String("udpListen", "", "Listen on UDP/IP `ipaddr:portnum`, e.g. `127.0.0.1:514`; must include IP (v4 or v6) and port")
+	RawForward = flag.Bool("cat", false, "Forward the input data as-is; do not try to parse as syslog-standard formats")
+	Out = flag.Bool("out:stdout", false, "Print data to STDOUT")
+	UnixSocket = flag.String("in:socket", "", "Listen on local socket `path`; socket will be created on startup")
+	TcpService = flag.String("in:tcp", "", "Listen on TCP/IP `ipaddr:portnum`, e.g. `127.0.0.1:514`; must include IP (v4 or v6) and port")
+	UdpService = flag.String("in:udp", "", "Listen on UDP/IP `ipaddr:portnum`, e.g. `127.0.0.1:514`; must include IP (v4 or v6) and port")
 	logging.Trace = flag.Bool("debug", false, "Verbose debug output")
-	logging.Silent = flag.Bool("quiet", false, "Silence logging output; ``does NOT affect the `-stdout` flag")
+	logging.Silent = flag.Bool("quiet", false, "Silence logging output; ``does NOT affect the `-out:stdout` flag")
 	SendTimeout = flag.Uint64("sendTimeoutMs", uint64(20*1000), "Number of `milliseconds` before aborting message to destination (default: 20000)")
-	flag.Var(&EventHubFlag{}, "eventHub", "Forward data to the provided Azure Event Hub `connection-uri`; multiple invocations of this flag will multiplex over each connection")
+	flag.Var(&EventHubFlag{}, "out:eventhub", "Forward data to the provided Azure Event Hub `connection-uri`; multiple invocations of this flag will multiplex over each connection")
 
 	flag.Parse()
 }
