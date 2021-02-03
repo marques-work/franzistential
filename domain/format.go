@@ -19,7 +19,8 @@ func (f *RawFormat) GetSplitFunc() bufio.SplitFunc {
 }
 
 func NewNoopParser(payload []byte) *NoopParser {
-	var p format.LogParts
+	p := make(format.LogParts)
+
 	message := string(payload)
 	p["rawmsg"] = message
 	p["rawmsg-after-pri"] = message

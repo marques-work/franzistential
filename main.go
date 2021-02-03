@@ -28,14 +28,56 @@ func main() {
 	conf.ConfigureAndValidate()
 
 	if conf.ServerMode() {
-		server := slog.NewServer()
+		channel := make(slog.LogPartsChannel)
+		handler := slog.NewChannelHandler(channel)
 
-		if *conf.RawForward {
-			server.SetFormat(RAW)
+		server := slog.NewServer()
+		server.SetFormat(RAW)
+
+		server.SetHandler(handler)
+
+		if "" != *conf.TcpService {
+			if err := server.ListenTCP(*conf.TcpService); err != nil {
+				logging.Die("Couldn't establish a TCP listener on %s: %v", *conf.TcpService, err)
+			}
 		}
 
-		ch := make(chan format.LogParts)
-		server.SetHandler(slog.NewChannelHandler(ch))
+		if "" != *conf.UdpService {
+			if err := server.ListenUDP(*conf.UdpService); err != nil {
+				logging.Die("Couldn't establish a UDP listener on %s: %v", *conf.UdpService, err)
+			}
+		}
+
+		if "" != *conf.UnixSocket {
+			if err := os.RemoveAll(*conf.UnixSocket); err != nil {
+				logging.Die("Socket appears to be busy; could not remove %s: %v", *conf.UnixSocket, err)
+			}
+
+			if err := server.ListenUnixgram(*conf.UnixSocket); err != nil {
+				logging.Die("Couldn't open a listening socket at %s: %v", *conf.UnixSocket, err)
+			}
+		}
+
+		server.Boot()
+
+		dest := conf.Destinations[0]
+		hub, err := eventhub.NewHubFromConnectionString(dest.ConnectString())
+
+		if err != nil {
+			logging.Die("Unable to establish connection to destination %v: %v", dest, err)
+		}
+
+		// consumes parsed log output handled by server
+		go func(channel slog.LogPartsChannel) {
+			for logParts := range channel {
+				send(logParts["msg"].(string), 20000, hub)
+				if *conf.Out {
+					fmt.Println(logParts["msg"].(string))
+				}
+			}
+		}(channel)
+
+		server.Wait()
 	} else {
 		input := bufio.NewScanner(os.Stdin)
 
@@ -43,8 +85,7 @@ func main() {
 		hub, err := eventhub.NewHubFromConnectionString(dest.ConnectString())
 
 		if err != nil {
-			logging.Die("Unable to establish connection: %v", err)
-			return
+			logging.Die("Unable to establish connection to destination %v: %v", dest, err)
 		}
 
 		for input.Scan() {
