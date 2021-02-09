@@ -7,6 +7,16 @@ import (
 	"github.com/marques-work/franzistential/logging"
 )
 
+type Options struct {
+	RawForward   *bool
+	Out          *bool
+	UnixSocket   *string
+	TcpService   *string
+	UdpService   *string
+	Destinations []domain.Destination
+	SendTimeout  *uint64
+}
+
 var (
 	RawForward   *bool
 	Out          *bool
