@@ -1,7 +1,9 @@
 package conf
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/marques-work/franzistential/domain"
 	"github.com/marques-work/franzistential/logging"
@@ -13,7 +15,11 @@ var Instance = &Options{}
 
 // Configure initializes and validates the default Options
 func Configure() {
-	Instance.BindAndValidate(&consoleOpts{
+	if err := Instance.Validate(); err != nil {
+		logging.Die("INVALID CONFIGURATION: %s", err.Error())
+	}
+
+	Instance.Bind(&consoleBinding{
 		Trace:  &logging.Trace,
 		Silent: &logging.Silent,
 	})
@@ -21,7 +27,7 @@ func Configure() {
 
 // Options represents configuration
 type Options struct {
-	Out          *bool
+	Out          *bool // keeping STDOUT as a boolean ensures it can only be specified once
 	Destinations []domain.Destination
 	SendTimeout  *uint64
 
@@ -30,6 +36,8 @@ type Options struct {
 	Trace  *bool
 
 	Server *ServerOptions
+
+	_parsed bool
 }
 
 // ServerMode returns whether or not to start a daemon
@@ -42,31 +50,46 @@ func (o *Options) HasDestination() bool {
 	return *o.Out || len(o.Destinations) > 0
 }
 
-// BindAndValidate binds config and validates
-func (o *Options) BindAndValidate(console *consoleOpts) {
-	console.Bind(o)
+// Bind parses and applies options to the target
+func (o *Options) Bind(targetConsole *consoleBinding) {
+	targetConsole.Bind(o)
 
-	if console.Invalid() {
-		logging.Die("Both `--debug` and `--quiet` cannot be simultaneously set; pick one")
+	if !o._parsed /* this should ever only happen once */ && *o.Out {
+		d, _ := domain.NewIO(os.Stdout)
+		o.Destinations = append(o.Destinations, d)
+	}
+
+	o._parsed = true
+}
+
+func (o *Options) Validate() error {
+	if *o.Trace && *o.Silent {
+		return errors.New("Both `--verbose` and `--quiet` cannot be simultaneously set; pick one")
 	}
 
 	if !o.HasDestination() {
-		logging.Warn("You have not set any destinations and are not printing to STDOUT; this will act like a sink, which might be a configuration error.")
+		logging.Warn("You have not configured any outputs; this is effectively a black hole, and might be a misconfiguration.")
 	}
 
 	if o.ServerMode() {
 		tcp := *o.Server.TCPService
 
 		if "" != tcp {
-			validateNetworkListenerConfig("tcp", tcp)
+			if err := validateNetworkListenerConfig("tcp", tcp); err != nil {
+				return err
+			}
 		}
 
 		udp := *o.Server.UDPService
 
 		if "" != udp {
-			validateNetworkListenerConfig("udp", udp)
+			if err := validateNetworkListenerConfig("udp", udp); err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }
 
 func (o *Options) String() string {
@@ -102,6 +125,7 @@ type ServerOptions struct {
 
 func (s *ServerOptions) String() string {
 	return "{\n" +
+		fmt.Sprintf("    Parser: %T\n", s.Parser) +
 		fmt.Sprintf("    TCPService: %s\n", *s.TCPService) +
 		fmt.Sprintf("    UDPService: %s\n", *s.UDPService) +
 		fmt.Sprintf("    UnixSocket: %s\n", *s.UnixSocket) +
@@ -110,21 +134,15 @@ func (s *ServerOptions) String() string {
 
 // IsPassThrough returns true when skipping parsing
 func (s *ServerOptions) IsPassThrough() bool {
-	return s.Parser == domain.RAW
+	return s.Parser == RAW
 }
 
-type consoleOpts struct {
+type consoleBinding struct {
 	Trace  *bool
 	Silent *bool
 }
 
-func (c *consoleOpts) Bind(opts *Options) {
+func (c *consoleBinding) Bind(opts *Options) {
 	*c.Trace = *opts.Trace
 	*c.Silent = *opts.Silent
 }
-
-func (c *consoleOpts) Invalid() bool {
-	return *c.Trace && *c.Silent
-}
-
-// flag.Bool("cat", false, "Forward the input data as-is; do not try to parse as syslog-standard formats")

@@ -29,5 +29,5 @@ func init() {
 	opts.Out = rootCmd.PersistentFlags().Bool("out:stdout", false, "Print data to STDOUT")
 	opts.SendTimeout = rootCmd.PersistentFlags().Uint64P("sendTimeoutMs", "t", uint64(20*1000), "Number of `milliseconds` before aborting message to destination (default: 20000)")
 	opts.Silent = rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Silence logging output; ``does NOT affect the `-out:stdout` flag")
-	opts.Trace = rootCmd.PersistentFlags().BoolP("debug", "v", false, "Verbose debug output")
+	opts.Trace = rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose debug output")
 }

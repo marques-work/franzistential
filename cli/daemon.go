@@ -3,10 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/marques-work/franzistential/run"
-
 	"github.com/marques-work/franzistential/conf"
-
+	"github.com/marques-work/franzistential/run"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +19,7 @@ var (
 		},
 	}
 
-	server = &conf.ServerOptions{}
+	server = &conf.ServerOptions{Parser: conf.DETECT}
 )
 
 func init() {

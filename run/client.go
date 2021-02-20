@@ -11,6 +11,7 @@ import (
 	"github.com/marques-work/franzistential/logging"
 )
 
+// Client forwards data to the configured outputs
 func Client(opts *conf.Options) error {
 	logging.Debug("ROOT - opts: %v", opts)
 	input := bufio.NewScanner(os.Stdin)
