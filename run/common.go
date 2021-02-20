@@ -20,6 +20,10 @@ func (m *Multiplexer) Accept(line string) {
 	}
 }
 
+type Producer struct {
+	tx domain.Transport
+}
+
 func send(payload string, timeout uint64, hub *eventhub.Hub) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Millisecond)
 	defer cancel()

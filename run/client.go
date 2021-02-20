@@ -29,7 +29,7 @@ func Client(opts *conf.Options) error {
 
 	for input.Scan() {
 		line := input.Text()
-		if err := send(line, *opts.SendTimeout, hub); err != nil {
+		if err := send(line, *opts.ConnectTimeout, hub); err != nil {
 			// Do we do more than this?
 			logging.Warn("Failed to send event %s to Event Hub [namespace]@[queue] because: %v", input.Text(), err)
 		}

@@ -10,7 +10,7 @@ import (
 
 type Producer interface {
 	StartForwarding() error
-	Accept(line string) error
+	Accept(line string)
 	Teardown() error
 }
 
@@ -27,8 +27,8 @@ func (e *eventHubProducer) StartForwarding() error {
 	return nil
 }
 
-func (e *eventHubProducer) Accept(line string) error {
-	return nil
+func (e *eventHubProducer) Accept(line string) {
+	e.input <- line
 }
 
 func (e *eventHubProducer) Teardown() error {

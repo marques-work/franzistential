@@ -27,9 +27,9 @@ func Configure() {
 
 // Options represents configuration
 type Options struct {
-	Out          *bool // keeping STDOUT as a boolean ensures it can only be specified once
-	Destinations []domain.Destination
-	SendTimeout  *uint64
+	Out            *bool // keeping STDOUT as a boolean ensures it can only be specified once
+	Destinations   []domain.Destination
+	ConnectTimeout *uint64
 
 	// logging
 	Silent *bool
@@ -96,7 +96,7 @@ func (o *Options) String() string {
 	return "Options {\n" +
 		fmt.Sprintf("  Out: %t\n", *o.Out) +
 		fmt.Sprintf("  Destinations (%d)%v\n", len(o.Destinations), o.dests()) +
-		fmt.Sprintf("  SendTimeout: %d ms\n", *o.SendTimeout) +
+		fmt.Sprintf("  ConnectTimeout: %d ms\n", *o.ConnectTimeout) +
 		fmt.Sprintf("  Server: %v\n", o.Server) +
 		fmt.Sprintf("  Trace: %t\n", *o.Trace) +
 		fmt.Sprintf("  Silent: %t\n", *o.Silent) +
